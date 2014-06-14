@@ -9,6 +9,7 @@
 import Foundation
 
 class Course {
+    
     var crn, course, num, courseCode, title, courseType, teacher, days1, days2, days3, location1, location2, location3:String
     var timeBegin1, timeBegin2, timeBegin3, timeEnd1, timeEnd2, timeEnd3, credits:Int
     
@@ -56,14 +57,15 @@ class CourseData {
     }
     
     func courseExists(course:String) -> Bool {
-        if let theCourse = courseCodes[course] {
+        if courseCodes[course] {
             return true
         }
-        else if let theCourse = courseCRNs[course] {
+        else if courseCRNs[course] {
             return true
         }
         return false
     }
+    
     
     func startConnection(){
         let urlPath: String = "http://brycelanglotz.com/Classifi/VirginiaTech.json"
@@ -76,40 +78,25 @@ class CourseData {
     
     func parseJSON(inputData: NSData) {
         var error: NSError?
-        var downloadedCourseDataArray: NSArray = NSJSONSerialization.JSONObjectWithData(inputData, options: NSJSONReadingOptions.MutableContainers, error: &error) as NSArray
-        
-        var crn, course, num, courseCode, title, courseType, teacher, days1, days2, days3, location1, location2, location3:String
-        var timeBegin1 = 0, timeBegin2 = 0, timeBegin3 = 0, timeEnd1 = 0, timeEnd2 = 0, timeEnd3 = 0, credits = 0
-        var tempCourse:Course
-
-        
-        for courseInfo : AnyObject in downloadedCourseDataArray {
-            crn = courseInfo["CRN"] as String
-            course = courseInfo["Course"] as String
-            num = courseInfo["Num"] as String
+        var downloadedCourseDataArray: Dictionary<String, String>[] = NSJSONSerialization.JSONObjectWithData(inputData, options: NSJSONReadingOptions.MutableContainers, error: &error) as Dictionary<String, String>[]
+        if error {
+            println("Could not parse JSON with error: " + error.description)
+        }
+        else {
             
-            if let aCourse = courseCodes[course + num] {
-                
+        }
+        var tempCourse:Course
+        for courseInfo: Dictionary<String, String> in downloadedCourseDataArray {
+            tempCourse = Course(crn: courseInfo["CRN"]!, course: courseInfo["Course"]!, num: courseInfo["Num"]!, title: courseInfo["Title"]!, courseType: courseInfo["Type"]!, teacher: courseInfo["Teacher"]!, days1: courseInfo["Days1"]!, days2: courseInfo["Days2"]!, days3: courseInfo["Days3"]!, location1: courseInfo["Location1"]!, location2: courseInfo["Location2"]!, location3: courseInfo["Location3"]!, timeBegin1: courseInfo["timeBegin1"]!.toInt()!, timeBegin2: courseInfo["timeBegin2"]!.toInt()!, timeBegin3: courseInfo["timeBegin3"]!.toInt()!, timeEnd1: courseInfo["timeEnd1"]!.toInt()!, timeEnd2: courseInfo["timeEnd2"]!.toInt()!, timeEnd3: courseInfo["timeEnd3"]!.toInt()!, credits: courseInfo["credits"]!.toInt()!)
+                courseCRNs[courseInfo["CRN"]!] = tempCourse
+            // If the course code already has an index add it to the existing index, otherwise add it
+            if courseCodes[courseInfo["Course"]! + courseInfo["Num"]!] {
+                var theCourseCodeDictionary = courseCodes[tempCourse.courseCode]!
+                theCourseCodeDictionary[tempCourse.crn] = tempCourse
             }
             else {
-                title = courseInfo["Title"] as String
-                courseType = courseInfo["Type"] as String
-                teacher = courseInfo["Teacher"] as String
-                days1 = courseInfo["Days1"] as String
-                days2 = courseInfo["Days2"] as String
-                days3 = courseInfo["Days3"] as String
-                location1 = courseInfo["Location1"] as String
-                location2 = courseInfo["Location2"] as String
-                location3 = courseInfo["Location3"] as String
-                timeBegin1 = courseInfo["timeBegin1"] as Int
-                timeBegin2 = courseInfo["timeBegin2"] as Int
-                timeBegin3 = courseInfo["timeBegin3"] as Int
-                timeEnd1 = courseInfo["timeEnd1"] as Int
-                timeEnd2 = courseInfo["timeEnd2"] as Int
-                timeEnd3 = courseInfo["timeEnd3"] as Int
-                credits = courseInfo["credits"] as Int
-                tempCourse = Course(crn: crn, course: course, num: num, title: title, courseType: courseType, teacher: teacher, days1: days1, days2: days2, days3: days3, location1: location1, location2: location2, location3: location3, timeBegin1: timeBegin1, timeBegin2: timeBegin2, timeBegin3: timeBegin3, timeEnd1: timeEnd1, timeEnd2: timeEnd2, timeEnd3: timeEnd3, credits: credits)
-                println("New Course Code: " + course + num)
+                println(tempCourse.courseCode)
+                courseCodes[tempCourse.courseCode] = [tempCourse.crn:tempCourse]
             }
         }
     }

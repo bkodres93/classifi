@@ -39,6 +39,9 @@ class SubmissionViewCell: UITableViewCell, UITextFieldDelegate {
     }
     
     func textFieldDidBeginEditing(textField: UITextField) {
+        if let strings = textField.text?.componentsSeparatedByCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) {
+            textField.text = strings[0]
+        }
         self.statusCircle.layer.addAnimation(scaleAnimation, forKey: "scale")
         UIView.animateWithDuration(0.4, animations: {
             self.statusCircle.backgroundColor = Colors.classifiPurple()
@@ -57,6 +60,10 @@ class SubmissionViewCell: UITableViewCell, UITextFieldDelegate {
             UIView.animateWithDuration(0.4, animations: {
                     self.statusCircle.frame = CGRectMake(0.0, CGRectGetHeight(self.bounds) / 2.0, 0.0, 0.0)
                 })
+            for theCourse in CourseData.sharedInstance.courseCodes[textField.text]!.values {
+                textField.text = textField.text + " - " + theCourse.title
+                break
+            }
         }
         else {
             UIView.animateWithDuration(0.4, animations: {
@@ -78,9 +85,8 @@ class SubmissionViewCell: UITableViewCell, UITextFieldDelegate {
     
 }
 
-class SubmissionViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class SubmissionViewController: UITableViewController, UITableViewDelegate, UITableViewDataSource {
 
-    @IBOutlet var tableView:UITableView
     let requestedCourses:String[] = []
     
     init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
@@ -93,11 +99,11 @@ class SubmissionViewController: UIViewController, UITableViewDelegate, UITableVi
         super.init(coder: aDecoder)
     }
     
-    func tableView(tableView: UITableView!, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(tableView: UITableView!, numberOfRowsInSection section: Int) -> Int {
         return self.requestedCourses.count + 5;
     }
     
-    func tableView(tableView: UITableView!, cellForRowAtIndexPath indexPath: NSIndexPath!) -> UITableViewCell! {
+    override func tableView(tableView: UITableView!, cellForRowAtIndexPath indexPath: NSIndexPath!) -> UITableViewCell! {
         var cell:SubmissionViewCell = self.tableView.dequeueReusableCellWithIdentifier("submissionViewCell") as SubmissionViewCell
         return cell
     }
@@ -109,7 +115,7 @@ class SubmissionViewController: UIViewController, UITableViewDelegate, UITableVi
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.registerClass(SubmissionViewCell.self, forCellReuseIdentifier: "submissionViewCell")
+        self.tableView.registerClass(SubmissionViewCell.self, forCellReuseIdentifier: "submissionViewCell")
         
         self.view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: "removeKeyboard"))
     }
